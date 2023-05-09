@@ -13,7 +13,22 @@ fastapi = "^0.95.1"
 openai = "^0.27.6"
 python-dotenv = "^1.0.0"
 pydantic = "^1.10.7"
+sqlalchemy = "^2.0.12"
 
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+isort = "^5.12.0"
+
+[tool.black]
+line-length = 79
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = false
+line_length = 79
 
 [build-system]
 requires = ["poetry-core"]
