@@ -1,13 +1,13 @@
 from datetime import datetime
+from pprint import pprint
 
-from fastapi import Depends
 from sqlalchemy.orm.session import Session
 
 from database.database import get_db
-from database.models import DbChat, DbMessage, DbSystem, DbRoll, DbGender, DbLanguage, DbCharacter
+from database.models import DbChat, DbMessage, DbSystem
 
-# Db初期化時にテスト用データをコミットする
-def test_initialize_db(db: Session = Depends(get_db)):
+# chat, system, をコミットする
+def test_push_db(db: Session):
     new_chat1 = DbChat(
         title = "test1",
         timestamp = datetime.now(),
@@ -17,10 +17,8 @@ def test_initialize_db(db: Session = Depends(get_db)):
         title = "test2",
         timestamp = datetime.now(),
     )
-
     db.add(new_chat1)
     db.add(new_chat2)
-    db.commit()
 
     new_message1 = DbMessage(
         chat_id = 1,
@@ -38,11 +36,45 @@ def test_initialize_db(db: Session = Depends(get_db)):
 
     db.add(new_message1)
     db.add(new_message2)
+
+    new_system1 = DbSystem(
+        chat_id = 1,
+        gender_id = 1,
+        language_id = 1,
+        character_id = 1,
+        other_setting = "The other"
+    )
+
+    new_system2 = DbSystem(
+        chat_id = 2,
+        gender_id = 2,
+        language_id = 2,
+        character_id = 2,
+        other_setting = None,
+    )
+
+    db.add(new_system1)
+    db.add(new_system2)
     db.commit()
 
-    new_role1 = DbMessage(
-        chat_id = 1,
-        role_id = 1,
-        content = "test content1",
-        timestamp = datetime.now(),
-    )
+
+def test_check_db(db: Session):
+    chats = db.query(DbChat).all()
+    messages = db.query(DbMessage).all()
+    systems = db.query(DbSystem).all()
+
+    pprint(chats)
+    pprint(messages)
+    pprint(systems)
+
+
+if __name__ == "__main__":
+    db = next(get_db())
+
+    if False:
+        test_push_db(db)
+
+    if False:
+        test_check_db(db)
+
+

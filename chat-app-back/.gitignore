@@ -4,6 +4,9 @@ __pycache__
 # .venv
 .venv
 
+# .vscode
+.vscode
+
 # env files
 .env*
 .env*.local

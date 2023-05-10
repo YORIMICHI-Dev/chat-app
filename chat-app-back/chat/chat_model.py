@@ -16,11 +16,12 @@ openai.api_key = os.getenv("OPEN_API_KEY")
 
 
 class RoleEnum(str, Enum):
+    system = "system"
     user = "user"
     assistant = "assistant"
 
 
-class ModelEnum(str, Enum):
+class GPTEnum(str, Enum):
     """Chat GPTで使用可能なモデル名
 
     Attributes:
@@ -38,18 +39,18 @@ class ModelEnum(str, Enum):
 
 
 class ChatAPI(BaseModel):
-    model: ModelEnum
+    gpt: GPTEnum
     system_model: SystemModel
-    max_tokens: conint(ge=0, le=150) = 150
-    temperature: confloat(ge=0, le=1.0) = 0.5
+    max_tokens: conint(gt=0, le=150) = 150
+    temperature: confloat(gt=0, le=1.0) = 0.5
     n: int = 1
     stop: Optional[str] = None
 
     @classmethod
-    def chat_factory(cls, model_name: str, system_model: SystemModel, max_tokens: int, temperature: float):
-        model = ModelEnum.get_value(model_name)
+    def chat_factory(cls, gpt_str: str, system_model: SystemModel, max_tokens: int, temperature: float):
+        gpt = GPTEnum.get_value(gpt_str)
         return cls(
-            model=model, 
+            gpt=gpt, 
             system_model=system_model, 
             max_tokens=max_tokens, 
             temperature=temperature
@@ -57,7 +58,7 @@ class ChatAPI(BaseModel):
 
     def create_response(self, messages: Dict[str, List[str]]):
         response = openai.ChatCompletion.create(
-            model=self.model.value,
+            model=self.gpt.value,
             messages=messages,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
