@@ -1,4 +1,5 @@
 import os
+import random
 from pathlib import Path
 from enum import Enum
 from typing import Dict, List, Optional
@@ -56,7 +57,7 @@ class ChatAPI(BaseModel):
             temperature=temperature
         )
 
-    def create_response(self, messages: Dict[str, List[str]]):
+    def create_response(self, messages: List[Dict[str, str]]):
         response = openai.ChatCompletion.create(
             model=self.gpt.value,
             messages=messages,
@@ -66,5 +67,11 @@ class ChatAPI(BaseModel):
             stop=self.stop,
         )
 
-        return response
+        # 複数回答が選ばれた場合（n >= 2でchoicesが複数の場合）は任意の一つを取得する
+        if len(response["choices"]) >= 2:
+            response_choice = random.choice(response["choices"])
+        else:
+            response_choice = response["choices"][0]
+
+        return response_choice.to_dict()
 

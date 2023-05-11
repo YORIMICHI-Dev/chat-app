@@ -1,15 +1,15 @@
 import traceback
 from typing import List, Dict, Union
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm.session import Session
 
 from chat.chat_model import ChatAPI, RoleEnum
 from chat.system_model import SystemModel
 from database import db_chat, db_system, db_config, db_message
 from database.database import get_db
-from database.models import DbChat, DbConfig, DbMessage, DbSystem
-from routes.shemas import ChatRequestBase, ChatGPTResponseBase, AddChatRequestBase
+from database.models import DbChat
+from routes.shemas import ChatRequestBase, ChatGPTResponseBase, AddChatRequestBase, MessageBase
 
 router = APIRouter(
     prefix="/chat",
@@ -55,10 +55,10 @@ def create_chat(request: ChatRequestBase, db: Session = Depends(get_db)) -> Chat
         db (Session, optional): 接続するデータベース Defaults to Depends(get_db).
 
     Returns:
-        message (ChatGPTResponseBase): Chat GPTからの返答
+        response (ChatGPTResponseBase): Chat GPTからの返答
     """
     try:
-        create_response: Dict[str, Union[DbChat, DbConfig, DbSystem, DbMessage]] = db_chat.create_chat(db=db, request=request)
+        created_response: Dict[str, int] = db_chat.create_chat(db=db, request=request)
 
         # リクエストされたシステム情報をもとにChat GPTが返答する
         request_system = SystemModel.system_factory(
@@ -74,13 +74,17 @@ def create_chat(request: ChatRequestBase, db: Session = Depends(get_db)) -> Chat
             temperature=request.config.temperature,
         )
 
-        # Chat GPTに渡すメッセージとしてシステム情報と質問内容を登録
+        # Chat GPTに渡すメッセージとしてシステム情報と質問内容を登録し返答を取得する
         question = {"role": RoleEnum.user.value, "content": request.content}
         new_messages: List[Dict[str, str]] = [request_system.system, question]
+        gpt_response = bot.create_response(messages=new_messages)
 
-        response = bot.create_response(messages=new_messages)
-        # TODO responseをDbMessageに追加する処理
-        return response
+        # Chat GPTからのメッセージをmessageデータベースに保存する
+        _ = db_message.insert_messages(
+            messages=[gpt_response["message"]], chat_id=created_response["new_chat_id"], db=db
+        )
+
+        return gpt_response
 
     except:
         traceback.print_exc()
@@ -93,35 +97,57 @@ def create_chat(request: ChatRequestBase, db: Session = Depends(get_db)) -> Chat
 
 @router.post(path="/add_chat/{chat_id}", response_model=ChatGPTResponseBase)
 def add_chat(chat_id: int, request: AddChatRequestBase, db: Session = Depends(get_db)):
-    # 現在のChat IDからSystemと今までのMessageを取得する
-    current_chat = db_chat.get_chat(id=chat_id, db=db)
-    current_config = db_config.get_config(chat_id=current_chat.id, db=db)
-    current_system = db_system.get_system(chat_id=current_chat.id, db=db)
+    """対象のChat IDに対して追加で質問する
 
-    # リクエストされたシステム情報をもとにChat GPTが返答する
-    request_system = SystemModel.system_factory(
-        gender_str=current_system.gender,
-        language_str=current_system.language,
-        character_str=current_system.character,
-        other_setting=current_system.other_setting,
-    )
-    bot = ChatAPI.chat_factory(
-        gpt_str=current_config.gpt, 
-        system_model=request_system, 
-        max_tokens=current_config.max_tokens, 
-        temperature=current_config.temperature,
-    )
+    Args:
+        chat_id (int): 対象のChat ID
+        request (AddChatRequestBase): 追加の質問内容
+        db (Session, optional): 接続するデータベース Defaults to Depends(get_db).
 
-    # Chat GPTに渡すメッセージとしてシステム情報と質問内容を登録
-    past_messages = db_message.get_messages(chat_id=chat_id, db=db)
-    print(past_messages)
-    raise Exception
-    question = {"role": RoleEnum.user.value, "content": request.content}
-    new_messages: List[Dict[str, str]] = [request_system.system, question]
+    Returns:
+        response (List[DbChat]): 取得したすべてのChat
+    """
+    try:
+        # 現在のChat IDからSystemとConfigを取得する
+        current_chat = db_chat.get_chat(id=chat_id, db=db)
+        current_config = db_config.get_config(chat_id=current_chat.id, db=db)
+        current_system = db_system.get_system(chat_id=current_chat.id, db=db)
 
-    return bot.create_response(messages=messages)
+        # Chat GPTに渡すメッセージとしてシステム情報を登録
+        request_system = SystemModel.system_factory(
+            gender_str=current_system.gender,
+            language_str=current_system.language,
+            character_str=current_system.character,
+            other_setting=current_system.other_setting,
+        )
+        bot = ChatAPI.chat_factory(
+            gpt_str=current_config.gpt, 
+            system_model=request_system, 
+            max_tokens=current_config.max_tokens, 
+            temperature=current_config.temperature,
+        )
 
+        # Chat GPTに渡す過去のメッセージを取得
+        past_messages = db_message.get_messages(chat_id=chat_id, db=db)
+        question = {"role": RoleEnum.user.value, "content": request.content}
+        new_messages: List[Dict[str, str]] = [request_system.system] + past_messages + [question]
 
+        gpt_response = bot.create_response(messages=new_messages)
+
+        # 質問内容とGPTの返答をmessageデータベースに登録
+        _ = db_message.insert_messages(messages=[question, gpt_response["message"]], chat_id=current_chat.id, db=db)
+
+        return gpt_response
+
+    except:
+        traceback.print_exc()
+        # 処理中にエラーが発生した場合はdb_chat.create_chatのコミットをロールバックする
+        db.rollback()
+        HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                      detail="Fatal for inserting Chat GPT response message into message table.")
+
+    finally:
+        db.close()
 
 @router.delete(path="/delete_chat", response_model=None)
 def delete_chat(id: int, db:Session = Depends(get_db)) -> Dict[str, str]:

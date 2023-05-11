@@ -6,7 +6,6 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm.session import Session
 
 from routes.shemas import ChatRequestBase
-from chat.chat_model import RoleEnum
 from database.models import DbChat, DbConfig, DbMessage, DbSystem, DbRole, DbGPT, DbGender, DbCharacter, DbLanguage
 
 
@@ -67,7 +66,7 @@ def get_chat(id: int, db: Session) -> DbChat:
                             detail=f"Fatal for getting chat id {id} from DB.")
 
 
-def create_chat(db: Session, request: ChatRequestBase) -> Dict[str, Union[DbChat, DbConfig, DbSystem, DbMessage]]:
+def create_chat(db: Session, request: ChatRequestBase) -> Dict[str, int]:
     """新規にChatデータを作成する。また、Chatに関するSystemおよびMessageも作成しコミットする
 
     Args:
@@ -78,7 +77,7 @@ def create_chat(db: Session, request: ChatRequestBase) -> Dict[str, Union[DbChat
         HTTPException HTTP_500_INTERNAL_SERVER_ERROR: 処理中にエラーが発生した場合
 
     Returns:
-        message (Dict[str, str]): 削除完了のメッセージ
+        message (Dict[str, int]): 新しく作成したChatのID
     """
     try:
         new_chat = DbChat(
@@ -105,6 +104,7 @@ def create_chat(db: Session, request: ChatRequestBase) -> Dict[str, Union[DbChat
         )
         db.add(new_system)
 
+
         new_message = DbMessage(
             chat_id = new_chat.id,
             role_id = db.query(DbRole).filter(DbRole.role == request.role).first().id,
@@ -114,12 +114,7 @@ def create_chat(db: Session, request: ChatRequestBase) -> Dict[str, Union[DbChat
         db.add(new_message)
         db.commit()
 
-        message = {
-            "chat": new_chat,
-            "config": new_config,
-            "system": new_system,
-            "message": new_message,
-        }
+        message = {"new_chat_id": new_chat.id}
 
         return message
 

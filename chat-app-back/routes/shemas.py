@@ -37,11 +37,7 @@ class AddChatRequestBase(BaseModel):
 
 
 # Chat GPT回答のレスポンス
-class ChatGPTMessageBase(BaseModel):
-    message: Dict[str, str]
-
-
 class ChatGPTResponseBase(BaseModel):
-    choices: List[ChatGPTMessageBase]
+    message: Dict[str, str]
 
 

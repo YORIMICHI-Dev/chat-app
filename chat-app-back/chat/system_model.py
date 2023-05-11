@@ -76,8 +76,3 @@ class SystemModel(BaseModel):
         values["system"] = {"role": "system", "content": " ".join(system_contents)}
 
         return values
-
-
-if __name__ == "__main__":
-    sys = SystemModel()
-    print(sys.system)
