@@ -63,9 +63,9 @@ class SystemModel(BaseModel):
         language = values.get("language", LanguageEnum.ja)
         character = values.get("character", CharacterEnum.mysteriousness)
 
-        your_gender = f"Your gender is {gender.value}."
-        your_language = f"Your language is {language.value}."
-        your_character = f"Your character is that {character.value}."
+        your_gender = f"You are {gender.value}."
+        your_language = f"You talk with {language.value}."
+        your_character = f"Your are that {character.value}."
 
         system_contents = [your_gender, your_language, your_character]
         if values.get("other_settings") is not None:

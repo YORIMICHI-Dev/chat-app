@@ -13,8 +13,8 @@ class DbChat(Base):
     __tablename__ = "chat"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(100), nullable=False)
-    config = relationship("DbConfig", back_populates="chat")
-    system = relationship("DbSystem", back_populates="chat")
+    config = relationship("DbConfig", back_populates="chat", uselist=False)
+    system = relationship("DbSystem", back_populates="chat", uselist=False)
     messages = relationship("DbMessage", back_populates="chat")
     timestamp = Column(DateTime, nullable=False)
 
@@ -29,7 +29,7 @@ class DbConfig(Base):
     gpt_id = Column(Integer, nullable=False)
     max_tokens = Column(Integer, nullable=False)
     temperature = Column(Float, nullable=False)
-    chat = relationship("DbChat", back_populates="config")
+    chat = relationship("DbChat", back_populates="config", uselist=False)
 
     def __repr__(self):
         return f"<DbConfig(id={self.id}, chat_id={self.chat_id}, gpt_id={self.gpt_id}, max_tokens={self.max_tokens}, temperature={self.temperature})>"
@@ -52,7 +52,7 @@ class DbSystem(Base):
     language_id = Column(Integer, nullable=False)
     character_id = Column(Integer, nullable=False)
     other_setting = Column(String(255))
-    chat = relationship("DbChat", back_populates="system")
+    chat = relationship("DbChat", back_populates="system", uselist=False)
 
     def __repr__(self):
         return f"<DbSystem(id={self.id}, chat_id={self.chat_id}, gender_id={self.gender_id}, language_id={self.language_id}, character_id={self.character_id}, other_setting={self.other_setting})>"

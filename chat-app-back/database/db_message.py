@@ -4,9 +4,9 @@ from typing import List, Dict
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm.session import Session
+from sqlalchemy.exc import SQLAlchemyError
 
-from routes.shemas import MessageBase
-from chat.chat_model import RoleEnum
+from routes.shemas import MessageResponse
 from database.models import DbMessage, DbRole
 
 
@@ -32,8 +32,10 @@ def get_messages(chat_id: int, db :Session) -> List[Dict[str, str]]:
                                 detail=f"Message (chat id {id}) is not found in DB.")
 
         # 該当のChat IDの過去メッセージを取得し時系列順に並べる
-        past_messages: List[MessageBase] = [
-            MessageBase(
+        past_messages: List[MessageResponse] = [
+            MessageResponse(
+                id  = message.id,
+                chat_id = message.chat_id,
                 role = db.query(DbRole).filter(DbRole.id == message.role_id).first().role,
                 content = message.content,
                 timestamp = message.timestamp,
@@ -47,7 +49,7 @@ def get_messages(chat_id: int, db :Session) -> List[Dict[str, str]]:
 
         return gpt_messages
     
-    except:
+    except SQLAlchemyError as e:
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Fatal for getting chat id {id} from DB.")
@@ -71,7 +73,7 @@ def insert_messages(messages: List[Dict[str,str]], chat_id: int, db: Session) ->
 
         return  
 
-    except:
+    except SQLAlchemyError as e:
         traceback.print_exc()
         db.rollback()
         HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

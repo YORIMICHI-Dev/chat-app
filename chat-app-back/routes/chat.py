@@ -1,5 +1,5 @@
 import traceback
-from typing import List, Dict, Union
+from typing import List, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm.session import Session
@@ -9,7 +9,7 @@ from chat.system_model import SystemModel
 from database import db_chat, db_system, db_config, db_message
 from database.database import get_db
 from database.models import DbChat
-from routes.shemas import ChatRequestBase, ChatGPTResponseBase, AddChatRequestBase, MessageBase
+from routes.shemas import ChatRequest, ChatGPTResponse, AddChatRequest, ChatResponse
 
 router = APIRouter(
     prefix="/chat",
@@ -17,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.get(path="/all_chats", response_model=None)
+@router.get(path="/all_chats", response_model=List[ChatResponse])
 def get_all_chats(db: Session = Depends(get_db)) -> List[DbChat]:
     """データベースに保存されているすべてのChatを取得する
 
@@ -30,7 +30,7 @@ def get_all_chats(db: Session = Depends(get_db)) -> List[DbChat]:
     return db_chat.get_all_chats(db=db)
 
 
-@router.get(path="/get_chat/{id}", response_model=None)
+@router.get(path="/get_chat/{id}", response_model=ChatResponse)
 def get_all_chat(id: int, db: Session = Depends(get_db)) -> DbChat:
     """対象のChat IDを取得する
 
@@ -44,18 +44,18 @@ def get_all_chat(id: int, db: Session = Depends(get_db)) -> DbChat:
     return db_chat.get_chat(id=id, db=db)
 
 
-@router.post(path="/create_chat", response_model=ChatGPTResponseBase)
-def create_chat(request: ChatRequestBase, db: Session = Depends(get_db)) -> ChatGPTResponseBase:
+@router.post(path="/create_chat", response_model=ChatGPTResponse)
+def create_chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatGPTResponse:
     """Chatデータと付随するSystemとMessageを新規に作成する
 
     また、リクエストからChat GPTの返答を取得する
 
     Args:
-        request (ChatRequestBase): 新規に作成するChatデータおよび質問内容
+        request (ChatRequest): 新規に作成するChatデータおよび質問内容
         db (Session, optional): 接続するデータベース Defaults to Depends(get_db).
 
     Returns:
-        response (ChatGPTResponseBase): Chat GPTからの返答
+        response (ChatGPTResponse): Chat GPTからの返答
     """
     try:
         created_response: Dict[str, int] = db_chat.create_chat(db=db, request=request)
@@ -95,8 +95,8 @@ def create_chat(request: ChatRequestBase, db: Session = Depends(get_db)) -> Chat
         db.close()
 
 
-@router.post(path="/add_chat/{chat_id}", response_model=ChatGPTResponseBase)
-def add_chat(chat_id: int, request: AddChatRequestBase, db: Session = Depends(get_db)):
+@router.post(path="/add_chat/{chat_id}", response_model=ChatGPTResponse)
+def add_chat(chat_id: int, request: AddChatRequest, db: Session = Depends(get_db)):
     """対象のChat IDに対して追加で質問する
 
     Args:
@@ -148,6 +148,7 @@ def add_chat(chat_id: int, request: AddChatRequestBase, db: Session = Depends(ge
 
     finally:
         db.close()
+
 
 @router.delete(path="/delete_chat", response_model=None)
 def delete_chat(id: int, db:Session = Depends(get_db)) -> Dict[str, str]:
