@@ -9,7 +9,7 @@ from chat.system_model import SystemModel
 from database import db_chat, db_system, db_config, db_message
 from database.database import get_db
 from database.models import DbChat
-from routes.shemas import ChatRequest, ChatGPTResponse, AddChatRequest, ChatResponse
+from routes.shemas import ChatRequest,  ChatResponse, CreateChatResponse, AddChatRequest, AddChatResponse
 
 router = APIRouter(
     prefix="/chat",
@@ -44,8 +44,8 @@ def get_all_chat(id: int, db: Session = Depends(get_db)) -> DbChat:
     return db_chat.get_chat(id=id, db=db)
 
 
-@router.post(path="/create_chat", response_model=ChatGPTResponse)
-def create_chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatGPTResponse:
+@router.post(path="/create_chat", response_model=CreateChatResponse)
+def create_chat(request: ChatRequest, db: Session = Depends(get_db)) -> CreateChatResponse:
     """Chatデータと付随するSystemとMessageを新規に作成する
 
     また、リクエストからChat GPTの返答を取得する
@@ -84,7 +84,11 @@ def create_chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatGPTR
             messages=[gpt_response["message"]], chat_id=created_response["new_chat_id"], db=db
         )
 
-        return gpt_response
+        response = {
+            "chat_id": created_response["new_chat_id"]
+        }
+
+        return response
 
     except:
         traceback.print_exc()
@@ -95,8 +99,8 @@ def create_chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatGPTR
         db.close()
 
 
-@router.post(path="/add_chat/{chat_id}", response_model=ChatGPTResponse)
-def add_chat(chat_id: int, request: AddChatRequest, db: Session = Depends(get_db)):
+@router.post(path="/add_chat/{chat_id}", response_model=AddChatResponse)
+def add_chat(chat_id: str, request: AddChatRequest, db: Session = Depends(get_db)):
     """対象のChat IDに対して追加で質問する
 
     Args:
@@ -110,8 +114,8 @@ def add_chat(chat_id: int, request: AddChatRequest, db: Session = Depends(get_db
     try:
         # 現在のChat IDからSystemとConfigを取得する
         current_chat = db_chat.get_chat(id=chat_id, db=db)
-        current_config = db_config.get_config(chat_id=current_chat.id, db=db)
-        current_system = db_system.get_system(chat_id=current_chat.id, db=db)
+        current_config = db_config.get_config(chat_id=current_chat.chat_id, db=db)
+        current_system = db_system.get_system(chat_id=current_chat.chat_id, db=db)
 
         # Chat GPTに渡すメッセージとしてシステム情報を登録
         request_system = SystemModel.system_factory(
@@ -135,9 +139,13 @@ def add_chat(chat_id: int, request: AddChatRequest, db: Session = Depends(get_db
         gpt_response = bot.create_response(messages=new_messages)
 
         # 質問内容とGPTの返答をmessageデータベースに登録
-        _ = db_message.insert_messages(messages=[question, gpt_response["message"]], chat_id=current_chat.id, db=db)
+        _ = db_message.insert_messages(messages=[question, gpt_response["message"]], chat_id=current_chat.chat_id, db=db)
 
-        return gpt_response
+        response = {
+            "chat_id": current_chat.chat_id
+        }
+
+        return response
 
     except:
         traceback.print_exc()
@@ -150,8 +158,8 @@ def add_chat(chat_id: int, request: AddChatRequest, db: Session = Depends(get_db
         db.close()
 
 
-@router.delete(path="/delete_chat", response_model=None)
-def delete_chat(id: int, db:Session = Depends(get_db)) -> Dict[str, str]:
+@router.delete(path="/delete_chat/{chat_id}", response_model=None)
+def delete_chat(chat_id: str, db:Session = Depends(get_db)) -> Dict[str, str]:
     """対象のChat IDを削除する
 
     Args:
@@ -161,5 +169,5 @@ def delete_chat(id: int, db:Session = Depends(get_db)) -> Dict[str, str]:
     Returns:
         message (Dict[str, str]): 削除完了のメッセージ
     """
-    return db_chat.delete_chat(id=id, db=db)
+    return db_chat.delete_chat(id=chat_id, db=db)
 

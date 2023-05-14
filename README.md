@@ -28,4 +28,4 @@ MITライセンス
 
 
 ## 作成者
-yorimichi (yorimichi.kouhaisan@gmail.com)
+yorimichi (yorimichi.dev@gmail.com)

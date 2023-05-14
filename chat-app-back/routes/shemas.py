@@ -64,8 +64,12 @@ class ChatResponse(BaseModel):
     messages: List[MessageResponse]
 
 
-# Chat GPT回答のレスポンス
-class ChatGPTResponse(BaseModel):
-    message: Dict[str, str]
+# 新規Chat作成時のレスポンス
+class CreateChatResponse(BaseModel):
+    chat_id: int
 
+
+# 既存Chatへの追加質問時のレスポンス
+class AddChatResponse(BaseModel):
+    chat_id: int
 

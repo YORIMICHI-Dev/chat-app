@@ -231,6 +231,7 @@ def delete_chat(id:int, db: Session):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail=f"Chat id {id} is not found in DB.")
         db.delete(chat)
+        db.commit()
 
         message = {"message": f"chat id {id} was deleted."}
         return message
