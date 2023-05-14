@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint --fix --dir src",
+    "format": "prettier --write src"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
@@ -28,6 +29,7 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
+    "prettier": "^2.8.8",
     "tailwind-scrollbar": "^3.0.1"
   }
 }

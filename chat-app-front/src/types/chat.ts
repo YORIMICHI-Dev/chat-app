@@ -7,7 +7,6 @@ export interface SystemProps {
     other_setting?: string
 }
 
-
 export interface MessageProps {
     id: number
     chat_id: number
@@ -16,7 +15,6 @@ export interface MessageProps {
     timestamp: string
 }
 
-
 export interface ConfigProps {
     id: number
     chat_id: number
@@ -24,7 +22,6 @@ export interface ConfigProps {
     max_tokens: number
     temperature: number
 }
-
 
 export interface ChatProps {
     chat_id: number
