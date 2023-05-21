@@ -27,12 +27,8 @@ class GPTEnum(str, Enum):
 
     Attributes:
         gpt_3_5_turbo: GPT-3.5モデル
-        text_davinci_003: GPT-3.5モデル
-        code_davinci_002: GPT-3.5モデル
     """
     gpt_3_5_turbo = "gpt-3.5-turbo"
-    text_davinci_003 = "text-davinci-003"
-    code_davinci_002 = "code-davinci-002"
 
     @classmethod
     def get_value(cls, name: str) -> str:
@@ -42,7 +38,7 @@ class GPTEnum(str, Enum):
 class ChatAPI(BaseModel):
     gpt: GPTEnum
     system_model: SystemModel
-    max_tokens: conint(gt=0, le=150) = 150
+    max_tokens: conint(gt=0, le=400) = 150
     temperature: confloat(gt=0, le=1.0) = 0.5
     n: int = 1
     stop: Optional[str] = None

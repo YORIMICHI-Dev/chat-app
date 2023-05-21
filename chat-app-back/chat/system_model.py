@@ -7,7 +7,7 @@ from pydantic import BaseModel, root_validator
 class GenderEnum(str, Enum):
     male = "male"
     female = "female"
-    undefined = "undefined"
+    not_defined = "not defined"
 
     @classmethod
     def get_value(cls, name: str) -> str:
