@@ -1,6 +1,6 @@
 import { createContext, Dispatch } from 'react'
-import { ChatProps } from '@/types/chat'
 
+// モーダルの開閉、現在のチャットID
 export type State = {
     isModalOpen: boolean
     currentChatId: number | null
@@ -16,3 +16,4 @@ export const Context = createContext<{
     state: { isModalOpen: false, currentChatId: null },
     dispatch: () => {},
 })
+

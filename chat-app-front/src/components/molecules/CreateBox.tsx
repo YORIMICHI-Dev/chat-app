@@ -1,15 +1,18 @@
-import { useState, useContext } from 'react'
-import { Context } from '@/lib/store/context'
+import { useState} from 'react'
+import { useRouter } from 'next/router'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRefresh, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
-import { ChatProps } from '@/types/chat'
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons'
 
 interface Props {
-    onChatUpdate: (updatedChat: ChatProps) => void
+    gender: string
+    language: string
+    character: string
+    gptModel: string
+    otherSetting: string
 }
 
-const SearchBox = ({onChatUpdate}: Props) => {
-    const {state, dispatch} = useContext(Context)
+const CreateBox = ({gender, language, character, gptModel, otherSetting}: Props) => {
+    const router = useRouter()
     const [content, setContent] = useState<string>('')
 
     const sendRequest = async (e: React.MouseEvent) => {
@@ -21,9 +24,23 @@ const SearchBox = ({onChatUpdate}: Props) => {
             if (content === ''.trim()) {
                     console.log('No Input')
             } else {
+                // 新規Chatを作成し新しいChat画面へ遷移する
                 const jsonString = JSON.stringify({
                     content: content,
+                    role: 'user',
+                    config: {
+                        gpt: gptModel,
+                        max_tokens: 200,
+                        temperature: 0.5,
+                    },
+                    system: {
+                        gender: gender,
+                        language: language,
+                        character: character,
+                        other_setting: otherSetting,
+                    },
                 })
+                console.log(jsonString)
                 const request = {
                     method: 'POST',
                     headers: new Headers({
@@ -33,22 +50,15 @@ const SearchBox = ({onChatUpdate}: Props) => {
                 }
 
                 const response = await fetch(
-                    process.env.NEXT_PUBLIC_API_URL +
-                        'chat/add_chat/' +
-                        `${state.currentChatId}`,
+                    process.env.NEXT_PUBLIC_API_URL + 'chat/create_chat/',
                     request
                 )
                 const json = await response.json()
 
                 if (response.ok) {
-                    // 現在のChatViewに対して、返信後のChatを更新する
-                    const response = await fetch(
-                        process.env.NEXT_PUBLIC_API_URL +
-                            "chat/get_chat/" +
-                            `${state.currentChatId}`
-                    )
-                    const json = await response.json()
-                    onChatUpdate(json)
+                    router.push(`/${json.chat_id}`)
+                } else {
+                    throw json
                 }
                 setContent('')
             } 
@@ -63,20 +73,6 @@ const SearchBox = ({onChatUpdate}: Props) => {
             className="w-full absolute bottom-10 left-1/2 -translate-x-1/2">
             <div className="w-full h-full border-t md:border-t-0 md:border-transparent">
                 <form className="flex flex-row-reverse items-center md:flex-col md:mx-4 lg:mx-auto lg:max-w-2xl pt-2">
-                    {/* Regenerate未実装 */}
-                    {/* <div className="h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center">
-                        <button className="md:border p-2 hover:bg-gray-100 rounded-md bg-white">
-                            <div className="flex w-full gap-2 items-center justify-center">
-                                <FontAwesomeIcon
-                                    icon={faRefresh}
-                                    className="h-4 w-4"
-                                />
-                                <span className="hidden md:block">
-                                    Regenerate response
-                                </span>
-                            </div>
-                        </button>
-                    </div> */}
                     <div className="relative flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark-bg-gray-700 rounded-md shadow-md">
                         <textarea
                             rows={1}
@@ -99,4 +95,4 @@ const SearchBox = ({onChatUpdate}: Props) => {
         </section>
     )
 }
-export default SearchBox
+export default CreateBox

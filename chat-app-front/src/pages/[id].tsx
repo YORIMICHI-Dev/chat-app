@@ -16,8 +16,8 @@ export default function ChatPage({ chats, currentChat }: Props) {
     const {state, dispatch} = useContext(Context)
 
     useEffect(() => {
-        dispatch({type: "SET_CHAT_ID", currentChatId: null})            
-    }, [dispatch])
+        dispatch({type: "SET_CHAT_ID", currentChatId: currentChat.chat_id})            
+    }, [dispatch, currentChat])
 
     return (
         <>
