@@ -13,7 +13,7 @@ from chat.system_model import SystemModel
 # APIキーの読み込み
 env_path = os.path.join(Path(__file__).resolve().parent.parent, ".env")
 load_dotenv(env_path)
-openai.api_key = os.getenv("OPEN_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 class RoleEnum(str, Enum):

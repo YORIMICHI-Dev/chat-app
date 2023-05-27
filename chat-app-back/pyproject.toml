@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["yorimichi <kouhaisan.yorimichi@gmail.com>"]
 readme = "README.md"
-packages = [{include = "chat_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -14,6 +13,7 @@ openai = "^0.27.6"
 python-dotenv = "^1.0.0"
 pydantic = "^1.10.7"
 sqlalchemy = "^2.0.12"
+gunicorn = "^20.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

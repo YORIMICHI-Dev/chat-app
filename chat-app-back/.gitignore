@@ -8,5 +8,4 @@ __pycache__
 .vscode
 
 # env files
-.env*
 .env*.local
