@@ -1,31 +1,60 @@
 # chat-app
+### Home View
+![alt text](images/Screenshot1.png)
+### Chat View
+![alt text](images/Screenshot2.png)
 
-## 概要
+## Overview
+Chat-App is a chatbot application developed with OpenAI's API. It employs a user-friendly interface and leverages the power of artificial intelligence to provide dynamic and interactive conversation experiences.
 
-チャットボット画面の作成。
-また、質問に対してOpen AIから回答を受け取り返信を表示する
-（作成中）
+## Installation
+To set up and run Chat-App, follow these steps:
 
+### Back-end
+The back-end runs on FastAPI, and you'll need to install **poetry** to manage the Python dependencies.
 
-## インストール
+Navigate to the back-end directory:
+```
+cd chat-app-back
+```
 
+Start the FastAPI server with:
+```
+poetry run uvicorn main:app --reload
+```
 
-## スタック
+### Front-end
+The front-end is a Next.js application.
 
-フロント画面
+Navigate to the front-end directory:
+```
+cd chat-app-front
+```
+
+Build the application with:
+```
+npm run build
+```
+
+Start the application with:
+```
+npm run start
+```
+
+## Tech Stack
+
+### Front-end
 - Next.js 13.4.1
 - TypeScript 5.0.4
 - Tailwind 3.3.2
 
-バックエンド
-- python 3.10.10
-- fastapi 0.95.1
-- poetry 1.4.2
+### Back-end
+- Python 3.10.10
+- FastAPI 0.95.1
+- Poetry 1.4.2
 
+## License
+This project is licensed under the terms of the MIT license.
 
-## ライセンス
-MITライセンス
-
-
-## 作成者
-yorimichi (yorimichi.dev@gmail.com)
+## Author
+Yorimichi (yorimichi.dev@gmail.com)
