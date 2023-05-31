@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useContext } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Context } from '@/lib/store/context'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faComment, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { sortDateChats } from '@/lib/chat'
 import { ChatProps } from '@/types/chat'
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 
 const PastChat = ({ chats }: Props) => {
     const router = useRouter()
+    const [currentChats, setCurrentChats] = useState(chats)
     const { state, dispatch } = useContext(Context)
 
     const routeChat = (chatId: number) => {
@@ -19,12 +20,28 @@ const PastChat = ({ chats }: Props) => {
         router.push(`/${chatId}`)
     }
 
+    useEffect(() => {
+        const fetchChats = async () => {
+            // APIからすべてのChatデータを取得
+            const fastAPI = process.env.NEXT_PUBLIC_API_URL
+            const pastChatsResponse = await fetch(fastAPI + 'chat/all_chats')
+            const pastChatsJson: ChatProps[] = await pastChatsResponse.json()
+
+            // 時期ごとにChatデータを区分けする
+            const sortedChats: { [key: string]: ChatProps[] } = sortDateChats(pastChatsJson)
+            setCurrentChats(sortedChats)
+        }
+
+        fetchChats()
+    }, [])
+
+
     return (
         <section
             id="pastChat"
             className="h-full transition-opacity duration-500 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded hover:scrollbar-thumb-gray-500">
             <div className="flex flex-col gap-2 pb-2 text-gray-100 text-sm">
-                {Object.entries(chats).map(([date, date_chats], id) => {
+                {Object.entries(currentChats).map(([date, date_chats], id) => {
                     return (
                         date_chats.length > 0 && (
                             <div key={id}>

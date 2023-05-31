@@ -19,6 +19,10 @@ export default function ChatPage({ chats, currentChat }: Props) {
         dispatch({type: "SET_CHAT_ID", currentChatId: currentChat.chat_id})            
     }, [dispatch, currentChat])
 
+    if (!currentChat) {
+        return <div>Loading...</div>  // fallback時の表示を設定します
+    }
+
     return (
         <>
             <Layout
